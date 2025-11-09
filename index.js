@@ -1,5 +1,6 @@
 const express = require('express');
 const Datastore = require('nedb-promises');
+const bcrypt = require('bcryptjs');
 
 // Initialize express
 const app = express();
@@ -23,8 +24,15 @@ app.post('/api/v1/auth/register', async(req,res)=>{
             return res.status(422).json({message: 'Please fill in all the provided fields'})
         }
 
+        const hashed_password = await bcrypt.hash(password,10);
 
+        const newUser = await users.insert({
+            name,
+            email,
+            password: hashed_password
+        })
 
+        return res.status(201).json({message: "User registered successfully 👍"})
         
     } catch (error) {
         return res.status(500).json({message: error.message})
