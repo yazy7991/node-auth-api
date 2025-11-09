@@ -24,6 +24,14 @@ app.post('/api/v1/auth/register', async(req,res)=>{
             return res.status(422).json({message: 'Please fill in all the provided fields'})
         }
 
+        // Validation to prevent email duplication in the database record.
+        if(await users.findOne({email})){
+            return res.status(409).json({
+                message: 'Email already exist'
+            })
+
+        }
+
         const hashed_password = await bcrypt.hash(password,10);
 
         const newUser = await users.insert({
@@ -32,7 +40,10 @@ app.post('/api/v1/auth/register', async(req,res)=>{
             password: hashed_password
         })
 
-        return res.status(201).json({message: "User registered successfully 👍"})
+        return res.status(201).json({
+            message: "User registered successfully 👍",
+            id: newUser._id
+        })
         
     } catch (error) {
         return res.status(500).json({message: error.message})
