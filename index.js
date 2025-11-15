@@ -76,7 +76,7 @@ app.post('/api/v1/auth/login', async (req,res) => {
 
         if(!password_match){
             return res.status(401).json({
-                message: 'Password is invalid'
+                message: 'Email or Password is invalid'
             })
 
         }
@@ -112,6 +112,58 @@ app.post('/api/v1/auth/login', async (req,res) => {
     }
     
 })
+
+app.get('/api/v1/users/current', ensureAuthenticated ,async(req,res)=>{
+    try {
+        const user = await users.findOne({
+            _id: req.user.id
+        })
+
+        return res.status(200).json({
+            id: user._id,
+            name: user.name,
+            email: user.email
+        })
+        
+    } catch (error) {
+        return res.status(500).json({message: error.message})
+
+        
+    }
+
+})
+
+async function ensureAuthenticated(req,res,next) {
+    const access_token = req.headers.authorization;
+    console.log(access_token);
+    
+
+    if(!access_token){
+        return res.status(401).json({
+            message: 'Accessn token not found'
+        })
+    }
+
+    try {
+        const decoded_access_token = jwt.verify(access_token,process.env.SECRET_KEY)
+
+        console.log(decoded_access_token);
+        
+
+        req.user = {
+            id: decoded_access_token.id
+        }
+
+        next()
+        
+    } catch (error) {
+        return res.status(401).json({
+            message: 'Access token invalid or expired'
+        })
+        
+    }
+    
+}
 
 
 
