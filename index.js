@@ -136,7 +136,13 @@ app.get('/api/v1/users/current', ensureAuthenticated ,async(req,res)=>{
 
 app.get('/api/v1/admin', ensureAuthenticated, authorize(['admin']), (req,res)=>{
     return res.status(200).json({
-        message: 'Only admins can access ths route'
+        message: 'Only admins can access ths route!'
+    })
+})
+
+app.get('/api/v1/moderator', ensureAuthenticated, authorize(['admin','moderator']), (req,res)=>{
+    return res.status(200).json({
+        message: 'Only admins and moderators can access ths route!'
     })
 })
 
@@ -177,8 +183,12 @@ function authorize(roles = []){
         const user = await users.findOne({_id:req.user.id})
 
         if(!user|| !roles.includes(user.role)){
-            return res.status(40)
+            return res.status(403).json({
+                message: 'Access denied'
+            })
         }
+
+        next()
     }
 }
 
