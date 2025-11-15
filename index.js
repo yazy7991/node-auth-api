@@ -21,7 +21,7 @@ app.get('/', (req,res)=>{
 // Route for user registration
 app.post('/api/v1/auth/register', async(req,res)=>{
     try {
-        const {name,email,password} = req.body;
+        const {name, email, password, role} = req.body;
         
         if(!name || !email || !password){
             return res.status(422).json({message: 'Please fill in all the provided fields'})
@@ -40,7 +40,8 @@ app.post('/api/v1/auth/register', async(req,res)=>{
         const newUser = await users.insert({
             name,
             email,
-            password: hashed_password
+            password: hashed_password,
+            role: role ?? 'member'
         })
 
         return res.status(201).json({
@@ -133,6 +134,12 @@ app.get('/api/v1/users/current', ensureAuthenticated ,async(req,res)=>{
 
 })
 
+app.get('/api/v1/admin', ensureAuthenticated, authorize(['admin']), (req,res)=>{
+    return res.status(200).json({
+        message: 'Only admins can access ths route'
+    })
+})
+
 async function ensureAuthenticated(req,res,next) {
     const access_token = req.headers.authorization;
     console.log(access_token);
@@ -163,6 +170,16 @@ async function ensureAuthenticated(req,res,next) {
         
     }
     
+}
+
+function authorize(roles = []){
+    return async function(req,res,next){
+        const user = await users.findOne({_id:req.user.id})
+
+        if(!user|| !roles.includes(user.role)){
+            return res.status(40)
+        }
+    }
 }
 
 
