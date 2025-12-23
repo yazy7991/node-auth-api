@@ -1,2 +1,3 @@
-{"name":"Joshua Josiah","email":"joshua@josiah.com","password":"$2b$10$v1Hdsjol8Q/e5srSaHAZIO/brxC1MRWZ3gfrnpNRNPJueIEScVGe.","_id":"4MR2TIlvXFprtVKK"}
-{"name":"Sarah Snook","email":"sarah@domain.com","password":"$2b$10$DjBSf5fmApm.oe81X18c/eoTFOma2k7z6WCr7GdPkhHU4VC8T//nS","_id":"i1OhGxb5LzJwUUBZ"}
+{"name":"Joshua Brentford","email":"joshua@domain.com","password":"$2b$10$qE2HtHESL/f3AU0dLEpLkOSPY1wWGOcjIrPwU.da7BkJXd39WzaB.","role":"admin","_id":"bw4xIN1was1CUUW6"}
+{"name":"John Doe","email":"jd@domain.com","password":"$2b$10$X8TvadCcAxBRbXp8DbDtbOvBr4Obo5xz2MFqN2VJ9FzKv4vjugZJm","role":"moderator","_id":"vXV2r1dm3eVMnim7"}
+{"name":"Jane Smith","email":"js@domain.com","password":"$2b$10$/JNMKnanX.qVKtLpa5E3KuxB0XnbfaFil770Mn.eToidoNEPIj5cO","role":"member","_id":"F7axLZ1Lr0vmfbzl"}

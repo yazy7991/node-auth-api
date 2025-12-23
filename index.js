@@ -13,6 +13,8 @@ app.use(express.json())
 // Simulate a user table local action
 const users = Datastore.create('User.db')
 
+const userRefreshTokens = Datastore.create('UserRefreshToken.db')
+
 
 app.get('/', (req,res)=>{
     res.send('REST API Authentication and Authorization')
@@ -99,11 +101,19 @@ app.post('/api/v1/auth/login', async (req,res) => {
             }
         )
 
+        const refresh_token = jwt.sign({id: user._id},process.env.REFRESH_KEY, {subject:'refreshToken', expiresIn: '1w'});
+
+        await userRefreshTokens.insert({
+            refresh_token,
+            id:user._id
+        })
+
         return res.status(200).json({
             id: user._id,
             name: user.name,
             email: user.email,
-            access_token
+            access_token,
+            refresh_token
         })
 
         
@@ -112,6 +122,48 @@ app.post('/api/v1/auth/login', async (req,res) => {
         
     }
     
+})
+
+app.post('/api/v1/auth/refresh-token', async(req,res)=>{
+    try {
+        const {refresh_token} = req.body;
+
+        if(!refresh_token){
+            return res.status(401).json({
+                message: 'Refresh token not found'
+            })
+        }
+
+        const decodedRefreshToken = jwt.verify(refresh_token,process.env.REFRESH_KEY);
+
+        const userRefreshToken = await userRefreshTokens.findOne({
+            refresh_token,
+            id:  decodedRefreshToken.id
+        })
+
+        if(!userRefreshToken){
+            return res.status(401).json({
+                message: 'Refresh token invalid or expired'
+            })
+
+        }
+
+        await userRefreshTokens.remove({_id:userRefreshToken._id})
+
+
+
+    } catch (error) {
+
+        if(error instanceof jwt.TokenExpiredError || error instanceof jwt.JsonWebTokenError){
+            return res.status(401).json({
+                message: 'Refresh token invalid or expired'
+            })
+        }
+        return res.status(500).json({
+            message: error.message
+        })
+        
+    }
 })
 
 app.get('/api/v1/users/current', ensureAuthenticated ,async(req,res)=>{
