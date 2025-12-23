@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const authRoutes = require('./routes/auth.routes');
 const usersRoutes = require('./routes/users.routes');
+const rolesRoutes = require('./routes/roles.routes');
 require('dotenv').config();
 
 // Initialize express
@@ -20,7 +21,7 @@ const userRefreshTokens = Datastore.create('UserRefreshToken.db')
 
 
 // Basic route
-app.get('/', (req,res)=>{
+app.use('/', (req,res)=>{
     res.send('REST API Authentication and Authorization')
 });
 
@@ -30,54 +31,9 @@ app.use('/api/v1/auth', authRoutes);
 // Use users routes
 app.use('/api/v1/users', usersRoutes);
 
+// Use roles routes
+app.use('/api/v1/roles', rolesRoutes);
 
-
-// Admin only route
-app.get('/api/v1/admin', ensureAuthenticated, authorize(['admin']), (req,res)=>{
-    return res.status(200).json({
-        message: 'Only admins can access ths route!'
-    })
-})
-
-// Admin and Moderator route
-app.get('/api/v1/moderator', ensureAuthenticated, authorize(['admin','moderator']), (req,res)=>{
-    return res.status(200).json({
-        message: 'Only admins and moderators can access ths route!'
-    })
-})
-
-// Middleware to ensure the user is authenticated
-async function ensureAuthenticated(req,res,next) {
-    const access_token = req.headers.authorization;
-    console.log(access_token);
-    
-
-    if(!access_token){
-        return res.status(401).json({
-            message: 'Accessn token not found'
-        })
-    }
-
-    try {
-        const decoded_access_token = jwt.verify(access_token,process.env.SECRET_KEY)
-
-        console.log(decoded_access_token);
-        
-
-        req.user = {
-            id: decoded_access_token.id
-        }
-
-        next()
-        
-    } catch (error) {
-        return res.status(401).json({
-            message: 'Access token invalid or expired'
-        })
-        
-    }
-    
-}
 
 // Middleware to authorize based on user roles
 function authorize(roles = []){

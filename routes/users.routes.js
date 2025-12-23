@@ -1,4 +1,6 @@
 const express = require('express');
+const ensureAuthenticated = require('../middleware/authenticate');
+const users = require('../datastores/users.datastore');
 const router = express.Router();
 
 // Protected route to get current user details
