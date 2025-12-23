@@ -7,15 +7,17 @@ require('dotenv').config();
 // Initialize express
 const app = express();
 
-// Configure body parser
+// Middleware to parse JSON request body
 app.use(express.json())
 
-// Simulate a user table local action
+// Initialize NeDB datastores
 const users = Datastore.create('User.db')
 
+// Datastore for storing refresh tokens
 const userRefreshTokens = Datastore.create('UserRefreshToken.db')
 
 
+// Basic route
 app.get('/', (req,res)=>{
     res.send('REST API Authentication and Authorization')
 });
@@ -124,6 +126,7 @@ app.post('/api/v1/auth/login', async (req,res) => {
     
 })
 
+// Route for refreshing access token
 app.post('/api/v1/auth/refresh-token', async(req,res)=>{
     try {
         const {refresh_token} = req.body;
@@ -134,7 +137,7 @@ app.post('/api/v1/auth/refresh-token', async(req,res)=>{
             })
         }
 
-        const decodedRefreshToken = jwt.verify(refresh_token,process.env.REFRESH_KEY);
+        const decodedRefreshToken = jwt.verify(refresh_token,process.env.REFRESH_KEY); // Will throw error if token is invalid or expired
 
         const userRefreshToken = await userRefreshTokens.findOne({
             refresh_token,
@@ -166,6 +169,7 @@ app.post('/api/v1/auth/refresh-token', async(req,res)=>{
     }
 })
 
+// Protected route to get current user details
 app.get('/api/v1/users/current', ensureAuthenticated ,async(req,res)=>{
     try {
         const user = await users.findOne({
@@ -186,18 +190,21 @@ app.get('/api/v1/users/current', ensureAuthenticated ,async(req,res)=>{
 
 })
 
+// Admin only route
 app.get('/api/v1/admin', ensureAuthenticated, authorize(['admin']), (req,res)=>{
     return res.status(200).json({
         message: 'Only admins can access ths route!'
     })
 })
 
+// Admin and Moderator route
 app.get('/api/v1/moderator', ensureAuthenticated, authorize(['admin','moderator']), (req,res)=>{
     return res.status(200).json({
         message: 'Only admins and moderators can access ths route!'
     })
 })
 
+// Middleware to ensure the user is authenticated
 async function ensureAuthenticated(req,res,next) {
     const access_token = req.headers.authorization;
     console.log(access_token);
@@ -230,6 +237,7 @@ async function ensureAuthenticated(req,res,next) {
     
 }
 
+// Middleware to authorize based on user roles
 function authorize(roles = []){
     return async function(req,res,next){
         const user = await users.findOne({_id:req.user.id})
@@ -245,5 +253,5 @@ function authorize(roles = []){
 }
 
 
-
+// Start the server
 app.listen(3000, ()=> console.log('Server started at port 3000'))
