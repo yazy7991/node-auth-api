@@ -1,7 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const users = require('../models/user.model');
-const refreshToken = require('../models/refreshToken.model');
+const userRefreshToken = require('../models/refreshToken.model');
 const { generateAccessToken, generateRefreshToken } = require('../utils/token');
 
 // Register Controller
@@ -72,7 +72,7 @@ const login = async (req,res) => {
         const access_token = generateAccessToken({id: user._id}); // Short expiry
         const refresh_token = generateRefreshToken({id: user._id}); // Longer expiry
 
-        await refreshToken.insert({
+        await userRefreshToken.insert({
             refresh_token,
             id:user._id
         }) // Store refresh token in the database
@@ -105,7 +105,7 @@ const refreshToken = async(req,res)=>{
 
         const decodedRefreshToken = jwt.verify(refresh_token,process.env.REFRESH_KEY); // Will throw error if token is invalid or expired
 
-        const storedRefreshToken = await refreshToken.findOne({
+        const storedRefreshToken = await userRefreshToken.findOne({
             refresh_token,
             id:  decodedRefreshToken.id
         }) // Check if the refresh token exists in the database
@@ -117,7 +117,7 @@ const refreshToken = async(req,res)=>{
 
         } // If refresh token not found in the database
 
-        await refreshToken.remove({_id: storedRefreshToken._id}) // Invalidate the used refresh token
+        await userRefreshToken.remove({_id: storedRefreshToken._id}) // Invalidate the used refresh token
 
         res.status(200).json({message: "Refresh token successfully invalidated"}) // You can choose to return a message indicating successful invalidation
 
