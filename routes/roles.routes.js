@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const ensureAuthenticated = require('../middleware/authenticate');
 const authorize = require('../middleware/authorize');
-const users = require('../models/user.model');
+
 
 // Admin only route
 router.get('/admin', ensureAuthenticated, authorize(['admin']), (req,res)=>{
@@ -16,3 +16,5 @@ router.get('/moderator', ensureAuthenticated, authorize(['admin','moderator']), 
         message: 'Only admins and moderators can access ths route!'
     })
 })
+
+module.exports = router;
