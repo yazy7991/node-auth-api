@@ -3,6 +3,7 @@ const Datastore = require('nedb-promises');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const authRoutes = require('./routes/auth.routes');
+const usersRoutes = require('./routes/users.routes');
 require('dotenv').config();
 
 // Initialize express
@@ -26,26 +27,10 @@ app.get('/', (req,res)=>{
 // Use auth routes
 app.use('/api/v1/auth', authRoutes);
 
-// Protected route to get current user details
-app.get('/api/v1/users/current', ensureAuthenticated ,async(req,res)=>{
-    try {
-        const user = await users.findOne({
-            _id: req.user.id
-        })
+// Use users routes
+app.use('/api/v1/users', usersRoutes);
 
-        return res.status(200).json({
-            id: user._id,
-            name: user.name,
-            email: user.email
-        })
-        
-    } catch (error) {
-        return res.status(500).json({message: error.message})
 
-        
-    }
-
-})
 
 // Admin only route
 app.get('/api/v1/admin', ensureAuthenticated, authorize(['admin']), (req,res)=>{
