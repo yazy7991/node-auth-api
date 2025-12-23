@@ -1,6 +1,6 @@
 const Datastore = require('nedb-promises');
 
 // Datastore for storing refresh tokens
-const RefreshToken = Datastore.create('RefreshToken.db')
+const userRefreshToken = Datastore.create('UserRefreshToken.db')
 
-module.exports = RefreshToken;
+module.exports = userRefreshToken;

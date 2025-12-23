@@ -1,7 +1,7 @@
-const express = require('express');
+const router = require('express').Router();
 const ensureAuthenticated = require('../middleware/authenticate');
-const users = require('../datastores/users.datastore');
-const router = express.Router();
+const authorize = require('../middleware/authorize');
+const users = require('../models/user.model');
 
 // Admin only route
 router.get('/admin', ensureAuthenticated, authorize(['admin']), (req,res)=>{
