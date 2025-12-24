@@ -1,5 +1,4 @@
 # This file is used to ignore files and directories in a Node.js project
-# Created on 2024-06-15
 
 # Ignore node modules
 node_modules
