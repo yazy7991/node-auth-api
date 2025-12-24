@@ -5,3 +5,6 @@ node_modules
 
 # Authentication configuration variables
 config/ 
+
+# Database files
+*.db

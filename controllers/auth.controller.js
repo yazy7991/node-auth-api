@@ -41,6 +41,7 @@ const register = async(req,res)=>{
     }
 }
 
+// Login Controller
 const login = async (req,res) => {
     try {
         const {email,password} = req.body;
@@ -93,6 +94,7 @@ const login = async (req,res) => {
     
 }
 
+// Refresh Token Controller
 const refreshToken = async(req,res)=>{
     try {
         const {refresh_token} = req.body;
@@ -129,7 +131,10 @@ const refreshToken = async(req,res)=>{
             id: decodedRefreshToken.id
         }) // Store the new refresh token in the database
 
-        res.status(200).json({message: "Refresh token successfully invalidated"}) // You can choose to return a message indicating successful invalidation
+        return res.status(200).json({
+            access_token: newAccessToken,
+            refresh_token: newRefreshToken
+        }) // Return the new tokens to the user
 
     } catch (error) {
 
@@ -145,9 +150,49 @@ const refreshToken = async(req,res)=>{
     }
 }
 
+// Logout Controller
+const logout = async (req,res) => {
+    try {
+        const {refresh_token} = req.body;
+
+        if(!refresh_token){
+            return res.status(401).json({
+                message: 'Refresh token not found'
+            })
+        }
+
+        const decodedRefreshToken = jwt.verify(refresh_token,process.env.REFRESH_KEY); // Will throw error if token is invalid or expired
+
+        const storedRefreshToken = await userRefreshToken.findOne({
+            refresh_token,
+            id:  decodedRefreshToken.id
+        }) // Check if the refresh token exists in the database
+
+        if(!storedRefreshToken){
+            return res.status(401).json({
+                message: 'Refresh token invalid or expired'
+            })
+
+        } // If refresh token not found in the database
+
+        await userRefreshToken.remove({_id: storedRefreshToken._id}) // Invalidate the used refresh token
+
+        await userRefreshToken.compactDatafile() // Compact the database to free up space
+
+        return res.status(200).json({message: "User logged out successfully"}) // Return a success message to the user
+
+    } catch (error) {
+
+        return res.status(500).json({
+            message: error.message
+        })
+        
+    }
+}
 
 module.exports = {
     register,
     login,
-    refreshToken
+    refreshToken,
+    logout
 }
