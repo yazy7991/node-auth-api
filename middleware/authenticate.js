@@ -19,7 +19,14 @@ async function ensureAuthenticated(req,res,next) {
         next() // Proceed to next middleware or route handler
         
     } catch (error) {
-        return res.status(401).json({ message: 'Access token invalid or expired'})
+
+        if (error instanceof jwt.TokenExpiredError) {
+            return res.status(401).json({ message: 'Access token expired', code: 'ACCESS_TOKEN_EXPIRED' }); // Custom code to indicate token expiration
+        } else if (error instanceof jwt.JsonWebTokenError) {
+            return res.status(401).json({ message: 'Access token invalid', code: 'ACCESS_TOKEN_INVALID' }); // Custom code to indicate invalid token
+        }else {
+            return res.status(500).json({ message: error.message }); // General server error
+        }
         
     }
     

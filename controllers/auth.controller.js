@@ -119,6 +119,16 @@ const refreshToken = async(req,res)=>{
 
         await userRefreshToken.remove({_id: storedRefreshToken._id}) // Invalidate the used refresh token
 
+        await userRefreshToken.compactDatafile() // Compact the database to free up space
+
+        const newAccessToken = generateAccessToken({id: decodedRefreshToken.id}); // Generate new access token
+        const newRefreshToken = generateRefreshToken({id: decodedRefreshToken.id}); // Generate new refresh token
+
+        await userRefreshToken.insert({
+            refresh_token: newRefreshToken,
+            id: decodedRefreshToken.id
+        }) // Store the new refresh token in the database
+
         res.status(200).json({message: "Refresh token successfully invalidated"}) // You can choose to return a message indicating successful invalidation
 
     } catch (error) {
