@@ -7,7 +7,11 @@ async function ensureAuthenticated(req,res,next) {
 
     if(!access_token){
         return res.status(401).json({ message: 'Accessn token not found'})
-    }
+    } // Check if access token is provided
+
+    if(await userInvalidRefreshToken.findOne({access_token: access_token})){
+        return res.status(401).json({ message: 'Access token invalid', code: 'ACCESS_TOKEN_INVALID' }); // Custom code to indicate invalid token
+    } // Check if the access token has been invalidated
 
     try {
         const decoded_access_token = jwt.verify(access_token,process.env.SECRET_KEY)
