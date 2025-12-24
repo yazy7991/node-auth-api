@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 // Middleware to ensure the user is authenticated
 async function ensureAuthenticated(req,res,next) {
     const access_token = req.headers.authorization;
-    console.log(access_token);
+    //console.log(access_token);
 
     if(!access_token){
         return res.status(401).json({ message: 'Accessn token not found'})
@@ -12,8 +12,9 @@ async function ensureAuthenticated(req,res,next) {
     try {
         const decoded_access_token = jwt.verify(access_token,process.env.SECRET_KEY)
 
-        console.log(decoded_access_token); //decoded token info
-        
+        //console.log(decoded_access_token); //decoded token info
+
+        req.access_token = {value: access_token, exp: decoded_access_token.exp}; // Attach access token to request object
         req.user = {id: decoded_access_token.id}; // Attach user info to request object
 
         next() // Proceed to next middleware or route handler
