@@ -11,8 +11,8 @@ const app = express();
 // Middleware to parse JSON request body
 app.use(express.json())
 
-// Basic route
-app.use('/', (req,res)=>{
+// Basic route-> Root endpoint to verify server is running
+app.get('/', (req,res)=>{
     res.send('REST API Authentication and Authorization')
 });
 
