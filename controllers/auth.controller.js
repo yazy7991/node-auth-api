@@ -155,7 +155,7 @@ const refreshToken = async(req,res)=>{
     }
 }
 
-// 2FA Controller
+// 2FA Controller -> Generate and return 2FA QR Code
 const get2FAQrCode = async (req, res) => {
     try {
         const user = await users.findOne({id: req.user.id}); // Fetch user details from the database
@@ -176,8 +176,20 @@ const get2FAQrCode = async (req, res) => {
         const qrCodeImage = await qrcode.toBuffer(otpauth, {type: 'image/png', margin: 1}); // Generate QR code image buffer
         res.setHeader('Content-Disposition', 'attachment; filename="qr-code.png"'); // Set header for file download
         return res.status(200).type('image/png').send(qrCodeImage); // Send the QR code image as a response
-        
+
     } catch (error) {
+        return res.status(500).json({
+            message: error.message
+        })
+    }
+}
+
+// 2FA Controller -> Validate 2FA Code
+const validate2FACode = async (req, res) => {
+    try {
+        const { token } = req.body;
+    }
+    catch (error) {
         return res.status(500).json({
             message: error.message
         })
@@ -213,5 +225,6 @@ module.exports = {
     login,
     refreshToken,
     get2FAQrCode,
+    validate2FACode,
     logout
 }
