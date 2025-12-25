@@ -187,7 +187,41 @@ const get2FAQrCode = async (req, res) => {
 // 2FA Controller -> Validate 2FA Code
 const validate2FACode = async (req, res) => {
     try {
-        const { token } = req.body;
+        const { totp } = req.body; // Extract TOTP code from request body
+
+        if (!totp) {
+            return res.status(422).json({
+                message: 'TOTP code is required'
+            });
+        } // Validate request body
+
+        const user = await users.findOne({ id: req.user.id }); // Fetch user details from the database
+
+        if (!user || !user.is2FAEnabled || !user['2FASecret']) {
+            return res.status(400).json({
+                message: '2FA is not enabled for this user'
+            });
+        } // Check if 2FA is enabled for the user
+
+        const isValid = authenticator.check(totp, user['2FASecret']); // Validate the provided TOTP code
+
+        if (!isValid) {
+            return res.status(401).json({
+                message: 'Invalid TOTP code'
+            });
+        } // If TOTP code is invalid
+
+        await users.update({ id: req.user.id }, {
+            $set: {
+                'is2FAEnabled': true
+            }
+        }); // Mark 2FA as validated for the user
+
+        await users.compactDatafile(); // Compact the database to free up space
+
+        return res.status(200).json({
+            message: '2FA validation successful'
+        }); // Successful validation
     }
     catch (error) {
         return res.status(500).json({
