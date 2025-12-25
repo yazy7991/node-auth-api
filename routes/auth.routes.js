@@ -11,7 +11,10 @@ router.post('/login', authController.login);
 // Refresh token route
 router.post('/refresh-token', authController.refreshToken);
 
+// 2FA route-> get 2FA QR code
+router.get('/2fa/generate', ensureAuthenticated, authController.get2FAQrCode);
+
 // Logout route
-router.post('/logout', ensureAuthenticated,authController.logout);
+router.get('/logout', ensureAuthenticated,authController.logout);
 
 module.exports = router;

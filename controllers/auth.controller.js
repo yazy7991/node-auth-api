@@ -1,5 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const {authenticator} = require('otplib');
+const qrcode = require('qrcode');
 const users = require('../models/user.model');
 const userRefreshToken = require('../models/refreshToken.model');
 const { generateAccessToken, generateRefreshToken } = require('../utils/token');
@@ -28,7 +30,9 @@ const register = async(req,res)=>{
             name,
             email,
             password: hashed_password,
-            role: role ?? 'member'
+            role: role ?? 'member', // Default role is 'member' if not provided
+            'is2FAEnabled': false, // Default value for 2FA
+            '2FASecret': null // Default value for 2FA
         })
 
         return res.status(201).json({
@@ -151,6 +155,35 @@ const refreshToken = async(req,res)=>{
     }
 }
 
+// 2FA Controller
+const get2FAQrCode = async (req, res) => {
+    try {
+        const user = await users.findOne({id: req.user.id}); // Fetch user details from the database
+
+        const secret = authenticator.generateSecret(); // Generate a unique secret for the user
+
+        const otpauth = authenticator.keyuri(user.email, 'MyApp', secret); // Generate otpauth URL
+
+        await users.update({id: req.user.id}, {
+            $set: {
+                '2FASecret': secret,
+                'is2FAEnabled': true
+            }
+        }); // Store the secret and enable 2FA for the user
+
+        await users.compactDatafile(); // Compact the database to free up space
+
+        const qrCodeImage = await qrcode.toBuffer(otpauth, {type: 'image/png', margin: 1}); // Generate QR code image buffer
+        res.setHeader('Content-Disposition', 'attachment; filename="qr-code.png"'); // Set header for file download
+        return res.status(200).type('image/png').send(qrCodeImage); // Send the QR code image as a response
+        
+    } catch (error) {
+        return res.status(500).json({
+            message: error.message
+        })
+    }
+}
+
 // Logout Controller
 const logout = async (req,res) => {
     try {
@@ -179,5 +212,6 @@ module.exports = {
     register,
     login,
     refreshToken,
+    get2FAQrCode,
     logout
 }
