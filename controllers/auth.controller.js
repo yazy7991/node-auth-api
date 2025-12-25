@@ -164,9 +164,7 @@ const logout = async (req,res) => {
             id: req.user.id
         }) // Store the invalidated access token
 
-        return res.status(200).json({
-            message: 'User logged out successfully'
-        })
+        return res.status(204).send() // Successful logout with no content
 
     } catch (error) {
 
