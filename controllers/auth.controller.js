@@ -25,7 +25,7 @@ const register = async(req,res)=>{
 
         }
 
-        const hashed_password = await bcrypt.hash(password,SALT_ROUNDS); // Hash the password before storing it in the database->the 10 is the salt rounds
+        const hashed_password = await bcrypt.hash(password,SALT_ROUNDS); // Hash the password before storing it in the database. The higher the SALT_ROUNDS, the more secure but slower the hashing process.
 
         const newUser = await users.insert({
             name,
