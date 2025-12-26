@@ -2,7 +2,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const {authenticator} = require('otplib');
 const qrcode = require('qrcode');
-const users = require('../models/user.model');
+const users = require('../models/user.model'); 
 const userRefreshToken = require('../models/refreshToken.model');
 const { generateAccessToken, generateRefreshToken } = require('../utils/token');
 const userInvalidRefreshToken = require('../models/invalidToken.model');
@@ -23,17 +23,17 @@ const register = async(req,res)=>{
                 message: 'Email already exist'
             })
 
-        }
+        } 
 
         const hashed_password = await bcrypt.hash(password,SALT_ROUNDS); // Hash the password before storing it in the database. The higher the SALT_ROUNDS, the more secure but slower the hashing process.
 
         const newUser = await users.insert({
-            name,
-            email,
-            password: hashed_password,
-            role: role ?? 'member', // Default role is 'member' if not provided
-            'is2FAEnabled': false, // Default value for 2FA
-            '2FASecret': null // Default value for 2FA
+            name, // Shorthand property names
+            email, // Shorthand property email
+            password: hashed_password, // Store hashed password
+            role: role ?? 'member', // Default role is 'member' if role is not provided
+            'is2FAEnabled': false, // Default value for 2FA-> the user has not enabled 2FA
+            '2FASecret': null // Default value for 2FA-> no secret initially
         })
 
         return res.status(201).json({
@@ -54,18 +54,18 @@ const login = async (req,res) => {
 
         if(!email || !password){
             return res.status(422).json({message: 'Either email or password field is incomplete'})
-        }
+        } // Validate request body
 
-        const user = await users.findOne({email})
+        const fetched_user = await users.findOne({email}) // Fetch user details from the database
 
-        if(!user){
+        if(!fetched_user){
             return res.status(401).json({
                 message: 'Email or Password is invalid'
             })
         }
 
-        // Compare the password from request with the stored user password in the database
-        const password_match = await bcrypt.compare(password,user.password);
+        // Compare the password from request with the fetched user password in the database
+        const password_match = await bcrypt.compare(password,fetched_user.password);
 
         if(!password_match){
             return res.status(401).json({
@@ -76,18 +76,18 @@ const login = async (req,res) => {
 
         // Generate Access and Refresh Token
 
-        const access_token = generateAccessToken({id: user._id}); // Short expiry
-        const refresh_token = generateRefreshToken({id: user._id}); // Longer expiry
+        const access_token = generateAccessToken({id: fetched_user._id}); // Short expiry
+        const refresh_token = generateRefreshToken({id: fetched_user._id}); // Longer expiry
 
         await userRefreshToken.insert({
             refresh_token,
-            id:user._id
-        }) // Store refresh token in the database
+            id: fetched_user._id
+        }) // Store refresh token in the database created to store refresh tokens.
 
         return res.status(200).json({
-            id: user._id,
-            name: user.name,
-            email: user.email,
+            id: fetched_user._id,
+            name: fetched_user.name,
+            email: fetched_user.email,
             access_token,
             refresh_token
         }) // Return access and refresh token to the user
