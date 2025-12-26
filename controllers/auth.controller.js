@@ -2,6 +2,8 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const {authenticator} = require('otplib');
 const qrcode = require('qrcode');
+const crypto = require('crypto');
+const cache = require('../cache/auth.cache');
 const users = require('../models/user.model'); 
 const userRefreshToken = require('../models/refreshToken.model');
 const { generateAccessToken, generateRefreshToken } = require('../utils/token');
@@ -73,6 +75,15 @@ const login = async (req,res) => {
             })
 
         }
+
+        if(fetched_user.is2FAEnabled){
+            const temp_token = crypto.randomUUID(); // Generate a temporary token for 2FA validation
+
+
+
+
+        }
+
 
         // Generate Access and Refresh Token
 
