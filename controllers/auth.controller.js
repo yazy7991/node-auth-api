@@ -116,6 +116,50 @@ const login = async (req,res) => {
     
 }
 
+const login2FA = async (req, res) => {
+    try{
+        const { temp_token, totp } = req.body; // Extract temporary token and TOTP code from request body
+
+        if (!temp_token || !totp) {
+            return res.status(422).json({ message: 'Temporary token and TOTP code are required' });
+        } // Validate request body
+
+        const cachedData = cache.get(temp_token); // Retrieve user ID from cache using the temporary token
+        if (!cachedData) {
+            return res.status(401).json({ message: 'Temporary token is invalid or has expired' });
+        } // If temporary token is invalid or expired
+
+        const user = await users.findOne({ id: cachedData.id }); // Fetch user details from the database
+        const isValid = authenticator.check(totp, user['2FASecret']); // Validate the provided TOTP code
+
+        if (!isValid) {
+            return res.status(401).json({ message: 'Invalid TOTP code' });
+        } // If TOTP code is invalid
+
+        // Generate Access and Refresh Token
+        const access_token = generateAccessToken({ id: user._id }); // Short expiry
+        const refresh_token = generateRefreshToken({ id: user._id }); // Longer expiry
+
+        await userRefreshToken.insert({
+            refresh_token,
+            id: user._id
+        }); // Store refresh token in the database
+
+        cache.delete(temp_token); // Remove the temporary token from cache after successful validation
+
+        return res.status(200).json({
+            id: user._id,
+            name: user.name,
+            email: user.email,
+            access_token,
+            refresh_token
+        }); // Return access and refresh token to the user
+
+    }catch(error){
+        return res.status(500).json({message: error.message})
+    }
+};
+
 // Refresh Token Controller-> Issue new Access and Refresh Tokens
 const refreshToken = async(req,res)=>{
     try {
@@ -274,6 +318,7 @@ const logout = async (req,res) => {
 module.exports = {
     register,
     login,
+    login2FA,
     refreshToken,
     get2FAQrCode,
     validate2FACode,

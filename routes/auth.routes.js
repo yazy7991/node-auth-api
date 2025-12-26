@@ -8,6 +8,9 @@ router.post('/register', authController.register);
 // Login route
 router.post('/login', authController.login);
 
+// 2FA Login route
+router.post('/login/2fa', authController.login2FA);
+
 // Refresh token route
 router.post('/refresh-token', authController.refreshToken);
 
