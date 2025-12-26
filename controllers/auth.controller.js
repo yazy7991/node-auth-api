@@ -6,6 +6,7 @@ const users = require('../models/user.model');
 const userRefreshToken = require('../models/refreshToken.model');
 const { generateAccessToken, generateRefreshToken } = require('../utils/token');
 const userInvalidRefreshToken = require('../models/invalidToken.model');
+const { SALT_ROUNDS } = require('../config/auth.config');
 
 // Register Controller
 const register = async(req,res)=>{
@@ -24,7 +25,7 @@ const register = async(req,res)=>{
 
         }
 
-        const hashed_password = await bcrypt.hash(password,10);
+        const hashed_password = await bcrypt.hash(password,SALT_ROUNDS); // Hash the password before storing it in the database->the 10 is the salt rounds
 
         const newUser = await users.insert({
             name,
