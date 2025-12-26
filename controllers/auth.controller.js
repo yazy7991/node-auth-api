@@ -100,7 +100,7 @@ const login = async (req,res) => {
     
 }
 
-// Refresh Token Controller
+// Refresh Token Controller-> Issue new Access and Refresh Tokens
 const refreshToken = async(req,res)=>{
     try {
         const {refresh_token} = req.body;
@@ -109,7 +109,7 @@ const refreshToken = async(req,res)=>{
             return res.status(401).json({
                 message: 'Refresh token not found'
             })
-        }
+        } /// Validate request body
 
         const decodedRefreshToken = jwt.verify(refresh_token,process.env.REFRESH_KEY); // Will throw error if token is invalid or expired
 
@@ -148,7 +148,7 @@ const refreshToken = async(req,res)=>{
             return res.status(401).json({
                 message: 'Refresh token invalid or expired'
             })
-        }
+        } // Handle token errors specifically-> invalid or expired tokens
         return res.status(500).json({
             message: error.message
         })
