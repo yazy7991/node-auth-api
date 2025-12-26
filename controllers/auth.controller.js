@@ -8,7 +8,7 @@ const users = require('../models/user.model');
 const userRefreshToken = require('../models/refreshToken.model');
 const { generateAccessToken, generateRefreshToken } = require('../utils/token');
 const userInvalidRefreshToken = require('../models/invalidToken.model');
-const { SALT_ROUNDS } = require('../config/auth.config');
+const { SALT_ROUNDS, TTL_VALUE } = require('../config/auth.config');
 
 // Register Controller
 const register = async(req,res)=>{
@@ -79,29 +79,34 @@ const login = async (req,res) => {
         if(fetched_user.is2FAEnabled){
             const temp_token = crypto.randomUUID(); // Generate a temporary token for 2FA validation
 
+            cache.set(temp_token, {id: fetched_user._id}, TTL_VALUE); // Store user ID in cache with a TTL of 5 minutes (300 seconds)
 
 
+            return res.status(200).json({                message: '2FA validation required',
+                temp_token,
+                expiry: Date.now() + TTL_VALUE * 1000 // Expiry time in milliseconds
+            }) // Inform the client that 2FA validation is required
+
+        }else{
+            // Generate Access and Refresh Token
+
+            const access_token = generateAccessToken({id: fetched_user._id}); // Short expiry
+            const refresh_token = generateRefreshToken({id: fetched_user._id}); // Longer expiry
+
+            await userRefreshToken.insert({
+                refresh_token,
+                id: fetched_user._id
+            }) // Store refresh token in the database created to store refresh tokens.
+
+            return res.status(200).json({
+                id: fetched_user._id,
+                name: fetched_user.name,
+                email: fetched_user.email,
+                access_token,
+                refresh_token
+            }) // Return access and refresh token to the user
 
         }
-
-
-        // Generate Access and Refresh Token
-
-        const access_token = generateAccessToken({id: fetched_user._id}); // Short expiry
-        const refresh_token = generateRefreshToken({id: fetched_user._id}); // Longer expiry
-
-        await userRefreshToken.insert({
-            refresh_token,
-            id: fetched_user._id
-        }) // Store refresh token in the database created to store refresh tokens.
-
-        return res.status(200).json({
-            id: fetched_user._id,
-            name: fetched_user.name,
-            email: fetched_user.email,
-            access_token,
-            refresh_token
-        }) // Return access and refresh token to the user
 
         
     } catch (error) {
